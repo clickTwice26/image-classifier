@@ -1,0 +1,4 @@
+env/
+instance/
+logs/
+ic/__pycache__/

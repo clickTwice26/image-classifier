@@ -8,9 +8,13 @@ import pytz
 from flask_caching import Cache
 from rq import Queue
 from datetime import timedelta, datetime
-
+from ic.logger import logger
 from ic.models import *
+from ic.forms import *
+import ic.handler as Handler
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # Or use any other random string
+app.config['WTF_CSRF_SECRET_KEY'] = os.urandom(24)
 app.config['SECRET_KEY'] = "adkasdkljaskldjklajdklajsdkljaklsdjasd"
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
@@ -42,11 +46,21 @@ limiter = Limiter(
     storage_uri="redis://localhost:6379"
 )
 
-app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return render_template('index.html')
+    allProjects = Projects.query.filter_by(projectStatus="Active").all()
+    
+    
+    return render_template('index.html', allProjects=allProjects)
 
+@app.route("/project/create", methods=["GET", "POST"])
+def projectCreate():
+    return Handler.projectCreator(db, request, session)
+
+
+@app.route("/project/manage", methods=["GET"])
+def projectManage():
+    return Handler.projectManager(db, request, session)
 if __name__ == "__main__":
     app.run(debug=True, port=8989, host="localhost")
