@@ -1,10 +1,11 @@
-from flask import render_template, abort, redirect, url_for, flash
+from flask import render_template, abort, redirect, url_for, flash, send_from_directory
 from ic.forms import ProjectForm
 import os
 from ic.models import Projects
 import json
 from datetime import datetime
 from ic.logger import logger
+from ic.programs import *
 def projectCreator(db, request, session):
     form = ProjectForm()
     if form.validate_on_submit():
@@ -37,16 +38,14 @@ def projectCreator(db, request, session):
             db.session.close()
         return redirect(url_for('projectCreate'))  
     else:
-        
         return render_template('projectCreate.html', form=form)
     return render_template('projectCreate.html', form=form)
 def projectManager(db, request, session):
-    projectId = request.args.get("projectId", None)
+    projectCode = request.args.get("projectCode", None)
     projectOperation = request.args.get('operation', None)
     
-    print(projectId, projectOperation)
-    if projectId and projectOperation:
-        projectInfo = Projects.query.filter_by(id = projectId).first()
+    if projectCode and projectOperation:
+        projectInfo = Projects.query.filter_by(projectCode = projectCode).first()
         if projectInfo is None:
             flash("Project not found", 'warning')
         if projectOperation == "delete":
@@ -58,9 +57,9 @@ def projectManager(db, request, session):
                 logger.error(error)
                 db.session.rollback()
                 flash("Something went wrong","error")
-
-        return redirect(url_for("projectManagement"))
-    
+        if projectOperation == "downloadDataset":
+            return sortClassification(projectInfo.projectCode)
+            return "done"
     else:
         return "Invalid arguments"
 def projectManagement(db, request, session):

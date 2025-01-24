@@ -5,8 +5,11 @@ from sqlalchemy.sql import func
 from flask_sqlalchemy import SQLAlchemy
 from flask import flash
 db = SQLAlchemy()
+import random
+import string
 
-
+def getUniqueToken(length=5) -> str:
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 class Projects(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     projectName = db.Column(db.String(100), nullable=False)
@@ -16,6 +19,7 @@ class Projects(db.Model):
     projectCreatedAt = db.Column(db.DateTime, default=datetime.now)
     projectUpdatedAt = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     projectClasses = db.Column(db.Text, nullable=True, default="[]")
+    projectCode = db.Column(db.String(200), nullable=False, default=getUniqueToken())
     
     
     def getProjectClasses(self) -> list:

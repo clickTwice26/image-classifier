@@ -65,7 +65,12 @@ def projectManagement():
     return Handler.projectManagement(db, request, session)
 @app.route("/project/<int:projectId>")
 def projectView(projectId : int):
-    return Project.projectViewer(db, request, session)
+    return Project.projectViewer(db, request, session, projectId=projectId)
+
+@app.route("/project/updateClassification/<string:projectCode>", methods=["GET", "POST"])
+def classficationUpdate(projectCode : str):
+    return Project.classificationUpdater(db, request, session, projectCode=projectCode)
+
 if __name__ == "__main__":
     app.run(debug=True, port=8989, host="localhost")
     

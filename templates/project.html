@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Project Viewer{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Project: {{ projectInfo.projectName }}</h1>
+    <div class="row">
+        {% for image in unclassifiedImages %}
+        <div class="col-6 col-md-4 col-lg-3 mb-4">
+            <div class="card shadow-sm" id="imageCard{{ loop.index }}" data-image="{{ image }}">
+                <img src="{{ url_for('static', filename=projectInfo.projectFolder ~ '/' ~ image) }}" class="card-img-top" alt="Image">
+                <div class="card-body">
+                    <h5 class="card-title text-center">{{ image }}</h5>
+                    <div class="form-group mb-3">
+                        <label for="classSelect{{ loop.index }}">Select Class</label>
+                        <select id="classSelect{{ loop.index }}" class="form-control" onchange="storeClassification({{ loop.index }}, this.value)">
+                            <option value="">--Select Class--</option>
+                            {% for class_name in projectInfo.getProjectClasses() %}
+                            <option value="{{ class_name }}">{{ class_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Disqualify Button -->
+                    <button class="btn btn-danger w-100" onclick="disqualifyImage({{ loop.index }})">Disqualify</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Overlay Update Button -->
+<div id="updateButtonOverlay" class="fixed-bottom d-flex justify-content-end p-3">
+    <button id="updateButton" class="btn btn-success">Update Classification</button>
+</div>
+
+<script>
+    // Initialize an empty object to store classifications and disqualified images
+    let classifications = JSON.parse(localStorage.getItem('classifications')) || {};
+    let disqualified = JSON.parse(localStorage.getItem('disqualified')) || [];
+
+    // Function to store classification in localStorage
+    function storeClassification(index, className) {
+        const imageName = document.querySelector(`#imageCard${index}`).getAttribute('data-image');
+
+        if (className) {
+            // Remove the image from disqualified list if it was previously disqualified
+            const disqualifiedIndex = disqualified.indexOf(imageName);
+            if (disqualifiedIndex !== -1) {
+                disqualified.splice(disqualifiedIndex, 1);
+                localStorage.setItem('disqualified', JSON.stringify(disqualified));
+                document.querySelector(`#imageCard${index}`).classList.remove('disqualified');
+            }
+
+            // Ensure the image can only belong to one classification at a time
+            for (let existingClass in classifications) {
+                const existingClassIndex = classifications[existingClass].indexOf(imageName);
+                if (existingClassIndex !== -1) {
+                    // Remove from the old classification
+                    classifications[existingClass].splice(existingClassIndex, 1);
+                }
+            }
+
+            // Add the image to the new classification
+            if (!classifications[className]) {
+                classifications[className] = [];
+            }
+            classifications[className].push(imageName);
+
+            // Mark the image as classified visually
+            document.querySelector(`#imageCard${index}`).classList.add('classified');
+        } else {
+            // If no class is selected, remove the image from all classes
+            for (let className in classifications) {
+                const indexInClass = classifications[className].indexOf(imageName);
+                if (indexInClass !== -1) {
+                    classifications[className].splice(indexInClass, 1);
+                }
+            }
+            // Remove the 'classified' class from the image card
+            document.querySelector(`#imageCard${index}`).classList.remove('classified');
+        }
+
+        // Update the classifications object in localStorage
+        localStorage.setItem('classifications', JSON.stringify(classifications));
+    }
+
+    // Function to disqualify an image
+    function disqualifyImage(index) {
+        const imageName = document.querySelector(`#imageCard${index}`).getAttribute('data-image');
+
+        // Remove from any class before disqualifying
+        for (let className in classifications) {
+            const classIndex = classifications[className].indexOf(imageName);
+            if (classIndex !== -1) {
+                classifications[className].splice(classIndex, 1);
+                localStorage.setItem('classifications', JSON.stringify(classifications));
+                document.querySelector(`#imageCard${index}`).classList.remove('classified');
+            }
+        }
+
+        // Add the image to the disqualified list if it's not already in it
+        if (!disqualified.includes(imageName)) {
+            disqualified.push(imageName);
+            // Mark the image as disqualified visually
+            document.querySelector(`#imageCard${index}`).classList.add('disqualified');
+        }
+
+        // Update the disqualified list in localStorage
+        localStorage.setItem('disqualified', JSON.stringify(disqualified));
+    }
+
+    // Update Button functionality: send classifications to the server
+    document.getElementById('updateButton').addEventListener('click', function() {
+        if (Object.keys(classifications).length > 0 || disqualified.length > 0) {
+            // Send the classifications and disqualified images to the server via a POST request
+            fetch(`{{url_for('classficationUpdate', projectCode = projectInfo.projectCode)}}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ classifications, disqualified }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);  // Success message
+                localStorage.removeItem('classifications'); // Clear classifications after sending
+                localStorage.removeItem('disqualified'); // Clear disqualified images after sending
+                document.querySelectorAll('.classified').forEach(card => card.classList.remove('classified'));
+                document.querySelectorAll('.disqualified').forEach(card => card.classList.remove('disqualified'));
+
+                // Reload the page after successful update
+                window.location.reload();  // This will reload the page
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating classifications.');
+            });
+        } else {
+            alert('No classifications or disqualifications to update.');
+        }
+    });
+</script>
+
+<style>
+    /* Fixed Overlay for Update Button */
+    #updateButtonOverlay {
+        position: fixed;
+        right: 0;
+        bottom: 10%;
+        z-index: 9999;
+    }
+
+    #updateButton {
+        width: 180px;
+        font-size: 16px;
+    }
+
+    /* Add a border or background color to classified images */
+    .classified {
+        border: 3px solid green;
+    }
+
+    /* Add a border or background color to disqualified images */
+    .disqualified {
+        border: 3px solid red;
+    }
+
+    .card-body .form-control {
+        background-color: #f8f9fa;
+    }
+</style>
+
+{% endblock %}

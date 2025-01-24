@@ -11,7 +11,7 @@ if not os.path.exists(LOG_FOLDER_NAME):
     os.makedirs(LOG_FOLDER_NAME)
 
 today = dt.date.today()
-logFileName = f"{LOG_FOLDER_NAME}/{today.month:02d}-{today.day:02d}-{today.year}.log"
+logFileName = os.path.join(LOG_FOLDER_NAME, f"{today.month:02d}-{today.day:02d}-{today.year}.log")
 
 def setup_logger():
     logger = logging.getLogger("flaskAppLogger")

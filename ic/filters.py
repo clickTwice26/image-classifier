@@ -3,7 +3,6 @@ import pytz
 
 dhaka_tz = pytz.timezone('Asia/Dhaka')
 
-# Define the filter function
 def format_datetime_to_dhaka(value):
     if value is None:
         return ''

@@ -36,7 +36,8 @@
                 </td>
                 <td>
                     <a href="" class="btn btn-primary btn-sm">Edit</a>
-                    <a href="{{url_for('projectManage', projectId = project.id, operation='delete')}}" class="btn btn-danger btn-sm">Delete</a>
+                    <a href="{{url_for('projectManage', projectCode= project.projectCode, operation='downloadDataset')}}" class="btn btn-primary btn-sm">Download Dataset</a>
+                    <a href="{{url_for('projectManage', projectCode = project.projectCode, operation='delete')}}" class="btn btn-danger btn-sm">Delete</a>
                 </td>
             </tr>
             {% endfor %}

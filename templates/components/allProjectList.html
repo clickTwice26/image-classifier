@@ -16,7 +16,7 @@
                     <p class="card-text">
                         <strong>Classes:</strong> {{ project.getProjectClasses() | join(', ') }}
                     </p>
-                    <a href="" class="btn btn-primary">View Project</a>
+                    <a href="{{url_for('projectView', projectId=project.id)}}" class="btn btn-primary">View Project</a>
                 </div>
             </div>
         </div>
