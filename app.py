@@ -12,8 +12,12 @@ from ic.logger import logger
 from ic.models import *
 from ic.forms import *
 import ic.handler as Handler
+import ic.filters as Filters
+import ic.project as Project
+
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Or use any other random string
+app.jinja_env.filters['dhaka_time'] = Filters.format_datetime_to_dhaka
 app.config['WTF_CSRF_SECRET_KEY'] = os.urandom(24)
 app.config['SECRET_KEY'] = "adkasdkljaskldjklajdklajsdkljaklsdjasd"
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -46,21 +50,22 @@ limiter = Limiter(
     storage_uri="redis://localhost:6379"
 )
 
-
 @app.route("/")
 def home():
     allProjects = Projects.query.filter_by(projectStatus="Active").all()
-    
-    
     return render_template('index.html', allProjects=allProjects)
-
 @app.route("/project/create", methods=["GET", "POST"])
 def projectCreate():
     return Handler.projectCreator(db, request, session)
-
-
 @app.route("/project/manage", methods=["GET"])
 def projectManage():
     return Handler.projectManager(db, request, session)
+@app.route("/project/management")
+def projectManagement():
+    return Handler.projectManagement(db, request, session)
+@app.route("/project/<int:projectId>")
+def projectView(projectId : int):
+    return Project.projectViewer(db, request, session)
 if __name__ == "__main__":
     app.run(debug=True, port=8989, host="localhost")
+    

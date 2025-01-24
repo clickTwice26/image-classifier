@@ -6,4 +6,5 @@ def getEmptyDirectorys(path: str) -> list:
         childDir = len(os.listdir(os.path.join(path, i)))  # Corrected path concatenation
         if childDir == 0:
             emptyDirs.append(i)
+    emptyDirs.remove("classified_images")
     return emptyDirs

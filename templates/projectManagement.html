@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-3">
+    <h2>Projects</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Project Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Project Classes</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                <td>{{ project.id }}</td>
+                <td>{{ project.projectName }}</td>
+                <td>{{ project.projectDescription }}</td>
+                <td>{{ project.projectStatus }}</td>
+                <td>{{ project.projectCreatedAt|dhaka_time }}</td>
+                <td>{{ project.projectUpdatedAt|dhaka_time }}</td>
+                <td>
+                    {% if project.projectClasses %}
+                        {% set classes = project.getProjectClasses() %}
+                        {% for class in classes %}
+                            <span class="badge bg-secondary">{{ class }}</span>
+                        {% endfor %}
+                    {% else %}
+                        No classes assigned
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="" class="btn btn-primary btn-sm">Edit</a>
+                    <a href="{{url_for('projectManage', projectId = project.id, operation='delete')}}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

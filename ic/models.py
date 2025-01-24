@@ -19,6 +19,7 @@ class Projects(db.Model):
     
     
     def getProjectClasses(self) -> list:
+        print(self.projectClasses)
         return json.loads(self.projectClasses)
     def addProjectClass(self, className : str) -> list:
         classes = self.getProjectClasses()

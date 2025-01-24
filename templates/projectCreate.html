@@ -3,52 +3,64 @@
 {% block title %}Create New Project{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h2 class="text-center">Create New Project</h2>
-    
-    <form method="POST" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}  <!-- CSRF token -->
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white text-center">
+                    <h2>Create New Project</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}  <!-- CSRF token -->
 
-        <!-- Project Name -->
-        <div class="mb-3">
-            {{ form.projectName.label(class="form-label") }}
-            {{ form.projectName(class="form-control") }}
-            {% for error in form.projectName.errors %}
-                <div class="text-danger">{{ error }}</div>
-            {% endfor %}
-        </div>
+                        <!-- Project Name -->
+                        <div class="mb-4">
+                            {{ form.projectName.label(class="form-label fw-bold") }}
+                            {{ form.projectName(class="form-control shadow-sm") }}
+                            {% for error in form.projectName.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
 
-        <!-- Project Description -->
-        <div class="mb-3">
-            {{ form.projectDescription.label(class="form-label") }}
-            {{ form.projectDescription(class="form-control") }}
-            {% for error in form.projectDescription.errors %}
-                <div class="text-danger">{{ error }}</div>
-            {% endfor %}
-        </div>
+                        <!-- Project Description -->
+                        <div class="mb-4">
+                            {{ form.projectDescription.label(class="form-label fw-bold") }}
+                            {{ form.projectDescription(class="form-control shadow-sm") }}
+                            {% for error in form.projectDescription.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
 
-        <!-- Project Folder (Dropdown) -->
-        <div class="mb-3">
-            {{ form.projectFolder.label(class="form-label") }}
-            {{ form.projectFolder(class="form-select") }}
-            {% for error in form.projectFolder.errors %}
-                <div class="text-danger">{{ error }}</div>
-            {% endfor %}
-        </div>
+                        <!-- Project Folder (Dropdown) -->
+                        <div class="mb-4">
+                            {{ form.projectFolder.label(class="form-label fw-bold") }}
+                            {{ form.projectFolder(class="form-select shadow-sm") }}
+                            {% for error in form.projectFolder.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
 
-        <!-- Project Classes (Comma-separated input) -->
-        <div class="mb-3">
-            <label for="projectClasses" class="form-label">Project Classes</label>
-            <div class="d-flex flex-wrap" id="classes-container">
-                <!-- Dynamically added classes will appear here as tags -->
+                        <!-- Project Classes -->
+                        <div class="mb-4">
+                            <label for="projectClasses" class="form-label fw-bold">Project Classes</label>
+                            <div class="d-flex flex-wrap border rounded p-2 mb-2" id="classes-container" style="min-height: 50px;">
+                                <!-- Dynamically added classes will appear here as tags -->
+                            </div>
+                            <input id="projectClasses" name="projectClasses" type="text" class="form-control shadow-sm" 
+                                   placeholder="Type class name and press Enter" autocomplete="off" value="{{ request.form.get('projectClasses', '') }}">
+                            <div class="form-text">Press Enter to add a class. Click "X" to remove it.</div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">Create Project</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <input id="projectClasses" name="projectClasses" type="text" class="form-control" placeholder="Type class name and press Enter" value="{{ request.form.get('projectClasses', '') }}">
-
         </div>
-
-        <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary">{{ form.submit.label }}</button>
-    </form>
+    </div>
 </div>
 
 <script>
@@ -62,13 +74,14 @@
 
     function createClassTag(className) {
         const tag = document.createElement('span');
-        tag.classList.add('badge', 'bg-primary', 'me-2', 'mb-2');
+        tag.classList.add('badge', 'bg-primary', 'text-white', 'me-2', 'mb-2');
+        tag.style.cursor = 'pointer';
         tag.innerText = className;
 
-        const removeButton = document.createElement('button');
-        removeButton.type = 'button';
-        removeButton.classList.add('btn', 'btn-sm', 'btn-danger', 'ms-2');
-        removeButton.innerText = 'X';
+        const removeButton = document.createElement('span');
+        removeButton.classList.add('ms-2', 'text-white', 'fw-bold');
+        removeButton.style.cursor = 'pointer';
+        removeButton.innerText = '✖';
         removeButton.onclick = function() {
             projectClasses = projectClasses.filter(c => c !== className);
             tag.remove();
@@ -90,6 +103,11 @@
             classInput.value = '';
             event.preventDefault();
         }
+    });
+
+    // Update the input value before form submission
+    document.querySelector('form').addEventListener('submit', function(event) {
+        updateProjectClasses();
     });
 </script>
 {% endblock %}
