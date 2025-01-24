@@ -15,23 +15,37 @@ def projectViewer(db, request, session, projectId):
     return render_template("project.html", projectInfo = projectInfo, unclassifiedImages = unclassifiedImages, projectStat = projectStat)
 
 
+import os
+from pathlib import Path
+
 class ProjectStats:
-    def __init__(self, projectCode : str):
-        print("ProjectStats Accessed")
-        self.projectInfo = Projects.query.filter_by(projectCode = projectCode).first()
-        self.getClassifiedNumber()
+    def __init__(self, projectCode: str):
+        try:
+            self.projectInfo = Projects.query.filter_by(projectCode=projectCode).first()
+            if not self.projectInfo:
+                raise ValueError(f"Project with code {projectCode} not found.")
+            self.getClassifiedNumber()
+        except Exception as e:
+            print(f"Error initializing ProjectStats: {e}")
 
     def getClassifiedNumber(self):
-        self.unclassifiedNumber = len(os.listdir(os.path.join("static", self.projectInfo.projectFolder)))
+        try:
+            project_folder_path = Path("static") / self.projectInfo.projectFolder
+            self.unclassifiedNumber = len(list(project_folder_path.glob('*')))
 
-        self.classifiedNumber = 0
-        self.disqualifiedNumber = 0
-        classifiedFolder = "static/classified_images"
-        classfiedImages = []
-        for i in os.listdir(classifiedFolder):
-            if (self.projectInfo.projectCode in i) and i.startswith("classified"):
-                classfiedImages.append(i)
-        self.classifiedNumber = len(classfiedImages)
+            self.classifiedNumber = 0
+            self.disqualifiedNumber = 0
+            classified_folder_path = Path("static") / "classified_images"
+            classifiedImages = []
+
+            for image in classified_folder_path.iterdir():
+                if image.name.startswith(f"classified_{self.projectInfo.projectCode}"):
+                    classifiedImages.append(image)
+
+            self.classifiedNumber = len(classifiedImages)
+        except Exception as e:
+            print(f"Error while calculating classified numbers: {e}")
+
 
 
 def classificationUpdater(db, request, session, projectCode):
