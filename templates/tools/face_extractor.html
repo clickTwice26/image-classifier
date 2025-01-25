@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Face Extractor{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <h2 class="text-center mb-4">Extract Faces from Video</h2>
+            <p class="text-center mb-4 text-muted">Upload a video file, and we'll extract faces from it at the specified interval. The faces will be packaged in a zip file for easy download.</p>
+
+            <!-- Upload Form -->
+            <form action="{{ url_for('faceExtractorUploader') }}" method="POST" enctype="multipart/form-data" id="videoUploadForm">
+                <div class="mb-4">
+                    <label for="video" class="form-label">Choose a Video</label>
+                    <input type="file" class="form-control" id="video" name="video" accept="video/*" required>
+                    <div class="invalid-feedback" id="videoError"></div>
+                </div>
+                <div class="mb-4">
+                    <label for="interval" class="form-label">Face Extraction Interval (in seconds)</label>
+                    <input type="number" class="form-control" id="interval" name="interval" min="1" value="30" required>
+                    <div class="invalid-feedback" id="intervalError"></div>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary btn-lg" id="uploadButton">Upload Video</button>
+                </div>
+            </form>
+
+            <!-- Progress Bar for Upload -->
+            <div class="mt-4" id="uploadProgress" style="display: none;">
+                <p class="text-center">Processing video...</p>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%;" id="progressBar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle form submission
+    const form = document.getElementById("videoUploadForm");
+    const uploadButton = document.getElementById("uploadButton");
+    const uploadProgress = document.getElementById("uploadProgress");
+    const progressBar = document.getElementById("progressBar");
+
+    form.onsubmit = function(event) {
+        event.preventDefault();  // Prevent form submission
+        
+        // Reset error messages and progress bar
+        document.getElementById("videoError").innerText = "";
+        document.getElementById("intervalError").innerText = "";
+        progressBar.style.width = '0%';
+        uploadProgress.style.display = 'block';
+
+        const formData = new FormData(form);
+        
+        // AJAX form submission
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', form.action, true);
+        
+        xhr.upload.onprogress = function(event) {
+            if (event.lengthComputable) {
+                let percent = (event.loaded / event.total) * 100;
+                progressBar.style.width = percent + '%';
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                // Parse JSON response containing the download URL
+                const response = JSON.parse(xhr.responseText);
+                const downloadUrl = response.download_url;
+                
+                // Trigger file download by redirecting to the download URL
+                window.location.href = downloadUrl;
+            } else {
+                // Handle error: Show error messages
+                alert("An error occurred during video processing. Please try again.");
+            }
+        };
+
+        xhr.onerror = function() {
+            alert("An unexpected error occurred. Please try again later.");
+        };
+
+        xhr.send(formData);
+    };
+
+    // Input validation (optional)
+    document.getElementById("interval").addEventListener("input", function() {
+        const intervalValue = this.value;
+        if (intervalValue < 1) {
+            document.getElementById("intervalError").innerText = "Interval must be at least 1 second.";
+        } else {
+            document.getElementById("intervalError").innerText = "";
+        }
+    });
+</script>
+
+{% endblock %}

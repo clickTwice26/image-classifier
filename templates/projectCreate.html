@@ -32,14 +32,7 @@
                             {% endfor %}
                         </div>
 
-                        <!-- Project Folder (Dropdown) -->
-                        <div class="mb-4">
-                            {{ form.projectFolder.label(class="form-label fw-bold") }}
-                            {{ form.projectFolder(class="form-select shadow-sm") }}
-                            {% for error in form.projectFolder.errors %}
-                                <div class="text-danger small">{{ error }}</div>
-                            {% endfor %}
-                        </div>
+
 
                         <!-- Project Classes -->
                         <div class="mb-4">

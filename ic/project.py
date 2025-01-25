@@ -66,13 +66,11 @@ def classificationUpdater(db, request, session, projectCode):
         projectInfo = Projects.query.filter_by(projectCode=projectCode).first()
         if not projectInfo:
             return jsonify({"message": "Project not found"}), 404
-        ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
         source_dir = os.path.join("static", projectInfo.projectFolder)
         classified_dir = os.path.join("static", "classified_images")
         
         os.makedirs(classified_dir, exist_ok=True)
-
         for class_name, images in classifications.items():
             for image in images:
                 source_path = os.path.join(source_dir, image)
@@ -83,13 +81,16 @@ def classificationUpdater(db, request, session, projectCode):
                         shutil.move(source_path, dest_path)
                         logger.info(f"Moved image {image} to {dest_path}")
                     except Exception as e:
-                        logger.error(f"Failed to move {image}: {str(e)}")
+                        logger.error(f"Failed to copy {image}: {str(e)}")
                 else:
                     logger.warning(f"Image {image} not found in {source_dir}")
 
         for image in disqualified:
             source_path = os.path.join(source_dir, image)
+            dest_path = os.path.join(classified_dir, f"disqualified_{projectInfo.projectCode}_{image}")
+            
             if os.path.exists(source_path):
+                shutil.move(source_path, dest_path)
                 logger.info(f"Image {image} marked as disqualified.")
             else:
                 logger.warning(f"Disqualified image {image} not found in {source_dir}")
@@ -112,7 +113,7 @@ def uploadImages(db, request, session, projectCode):
         return jsonify({'success': False, 'message': 'No files selected for upload.'}), 400
     projectInfo = Projects.query.filter_by(projectCode = projectCode).first()
     project_folder = os.path.join('static', projectInfo.projectFolder)
-    os.makedirs(project_folder, exist_ok=True)  # Ensure the project folder exists
+    os.makedirs(project_folder, exist_ok=True)  
 
     uploaded_files = []
     for file in files:

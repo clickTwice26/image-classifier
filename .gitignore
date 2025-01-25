@@ -2,3 +2,5 @@ env/
 instance/
 logs/
 ic/__pycache__/
+storage/
+face_extractor/

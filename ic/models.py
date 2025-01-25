@@ -7,9 +7,8 @@ from flask import flash
 db = SQLAlchemy()
 import random
 import string
+from ic.programs import *
 
-def getUniqueToken(length=5) -> str:
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 class Projects(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     projectName = db.Column(db.String(100), nullable=False)

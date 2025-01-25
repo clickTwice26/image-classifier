@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Tools Showcase{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 text-center mb-4">
+            <h1 class="display-4">Our Tools</h1>
+            <p class="lead">Explore the powerful tools we offer for your projects.</p>
+        </div>
+    </div>
+    <div class="row g-4">
+        <!-- Example Tool Card -->
+        {% for tool in tools %}
+        <div class="col-md-4">
+            <div class="card h-100">
+                <img src="{{ tool.image_url }}" class="card-img-top" alt="{{ tool.name }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ tool.name }}</h5>
+                    <p class="card-text">{{ tool.description }}</p>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ tool.link }}" class="btn btn-primary">Use</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

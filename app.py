@@ -14,6 +14,7 @@ from ic.forms import *
 import ic.handler as Handler
 import ic.filters as Filters
 import ic.project as Project
+import ic.tools as Tools
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -81,6 +82,22 @@ def classficationUpdate(projectCode : str):
 @app.route('/uploadPhotos/<string:projectCode>', methods=['POST'])
 def uploadPhotos(projectCode : str):
    return Project.uploadImages(db, request, session, projectCode)
+
+
+@app.route("/tools")
+def toolsView():
+    return Tools.toolsViewer(db, request, session)
+
+@app.route("/tool/face-extractor")
+def toolFaceExtractorView():
+    return Tools.faceExtractorViewer(db, request, session)
+
+@app.route("/upload_video", methods=["GET", "POST"])
+def faceExtractorUploader():
+    return Tools.faceExtractorUploader(db, request, session)
+@app.route('/download/<filename>')
+def download_zip(filename):
+    return Tools.download_zip(filename)
 if __name__ == "__main__":
     app.run(debug=True, port=8989, host="localhost")
     

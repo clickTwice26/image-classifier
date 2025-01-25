@@ -11,7 +11,7 @@ def projectCreator(db, request, session):
     if form.validate_on_submit():
         project_name = form.projectName.data
         project_description = form.projectDescription.data
-        project_folder = form.projectFolder.data
+        project_folder = getUniqueToken()
         project_classes = request.form.get('projectClasses', '').split(',')  # Split by commas
 
         
@@ -24,6 +24,7 @@ def projectCreator(db, request, session):
             projectCreatedAt=datetime.now(),
             projectUpdatedAt=datetime.now()
         )
+        os.makedirs(os.path.join("static", project_folder), exist_ok=True)
         try:
             db.session.add(new_project)
             db.session.commit()
@@ -51,6 +52,7 @@ def projectManager(db, request, session):
                 db.session.delete(projectInfo)
                 db.session.commit()        
                 flash("Project Deleted", "success")
+    
             except Exception as error:
                 logger.error(error)
                 db.session.rollback()
@@ -58,6 +60,7 @@ def projectManager(db, request, session):
         if projectOperation == "downloadDataset":
             return sortClassification(projectInfo.projectCode)
             return "done"
+        return redirect(url_for("projectManagement"))
     else:
         return "Invalid arguments"
 def projectManagement(db, request, session):

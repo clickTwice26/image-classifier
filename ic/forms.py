@@ -7,12 +7,11 @@ from ic.programs import getEmptyDirectorys
 class ProjectForm(FlaskForm):
     projectName = StringField('Project Name', validators=[DataRequired()])
     projectDescription = TextAreaField('Project Description', validators=[DataRequired()])
-    projectFolder = SelectField('Project Folder', coerce=str, validators=[DataRequired()])
+    # projectFolder = SelectField('Project Folder', coerce=str, validators=[DataRequired()])
     submit = SubmitField('Create Project')
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
         
-        # Dynamically populate the projectFolder field with empty directories in /static
-        emptyFolders = getEmptyDirectorys('static')  # Use your function here
-        self.projectFolder.choices = [('', 'Select a Folder')] + [(folder, folder) for folder in emptyFolders]
+    #     emptyFolders = getEmptyDirectorys('static')  # Use your function here
+    #     self.projectFolder.choices = [('', 'Select a Folder')] + [(folder, folder) for folder in emptyFolders]

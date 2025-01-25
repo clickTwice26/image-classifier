@@ -3,7 +3,8 @@ import shutil
 import zipfile
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
-
+import random
+import string
 def getEmptyDirectorys(path: str) -> list:
     rootDirs = os.listdir(path)
     emptyDirs = []
@@ -53,3 +54,5 @@ def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
     
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def getUniqueToken(length=5) -> str:
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
