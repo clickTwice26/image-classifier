@@ -1,6 +1,25 @@
 {% extends "base.html" %}
 
-{% block content%}
-{% include 'components/allProjectList.html'%}
-
-{% endblock%}
+{% block content %}
+<div class="container py-5">
+    <h1 class="text-center mb-5">Active Projects</h1>
+    <div class="row g-4">
+        {% for project in allProjects %}
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title text-primary">{{ project.projectName }}</h5>
+                    <p class="card-text flex-grow-1">{{ project.projectDescription }}</p>
+                    <ul class="list-unstyled text-muted small mb-3">
+                        <li><strong>Status:</strong> {{ project.projectStatus }}</li>
+                        <li><strong>Created at:</strong> {{ project.projectCreatedAt.strftime('%Y-%m-%d %H:%M:%S') }}</li>
+                        <li><strong>Classes:</strong> {{ project.getProjectClasses() | join(', ') }}</li>
+                    </ul>
+                    <a href="{{ url_for('projectView', projectId=project.id) }}" class="btn btn-primary mt-auto">View Project</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

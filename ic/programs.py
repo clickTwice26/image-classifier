@@ -5,6 +5,9 @@ from flask import send_from_directory
 from werkzeug.utils import secure_filename
 import random
 import string
+
+
+
 def getEmptyDirectorys(path: str) -> list:
     rootDirs = os.listdir(path)
     emptyDirs = []
