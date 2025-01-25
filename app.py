@@ -14,6 +14,7 @@ from ic.forms import *
 import ic.handler as Handler
 import ic.filters as Filters
 import ic.project as Project
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Or use any other random string
@@ -29,6 +30,11 @@ app.config['CACHE_REDIS_HOST'] = 'localhost'
 app.config['CACHE_REDIS_PORT'] = 6379
 app.config['CACHE_REDIS_DB'] = 0
 app.config['CACHE_REDIS_URL'] = 'redis://localhost:6379/0'
+UPLOAD_FOLDER = 'static' 
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
 cache = Cache(app)
 redis_connection = redis.Redis(host='localhost', port=6379, db=0)
 app.permanent_session_lifetime = timedelta(minutes=30)
@@ -71,6 +77,10 @@ def projectView(projectId : int):
 def classficationUpdate(projectCode : str):
     return Project.classificationUpdater(db, request, session, projectCode=projectCode)
 
+
+@app.route('/uploadPhotos/<string:projectCode>', methods=['POST'])
+def uploadPhotos(projectCode : str):
+   return Project.uploadImages(db, request, session, projectCode)
 if __name__ == "__main__":
     app.run(debug=True, port=8989, host="localhost")
     

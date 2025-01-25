@@ -3,7 +3,9 @@ from ic.models import Projects
 import os
 from ic.logger import logger
 import shutil
-
+import os
+from pathlib import Path
+from ic.programs import *
 def projectViewer(db, request, session, projectId):
     projectInfo = Projects.query.filter_by(id = projectId).first()
     if projectInfo is None:
@@ -11,12 +13,10 @@ def projectViewer(db, request, session, projectId):
         return redirect(url_for('projectManagement'))
     projectStat = ProjectStats(projectInfo.projectCode)
     unclassifiedImages = os.listdir(os.path.join('static', projectInfo.projectFolder))
-    print(unclassifiedImages)
     return render_template("project.html", projectInfo = projectInfo, unclassifiedImages = unclassifiedImages, projectStat = projectStat)
 
 
-import os
-from pathlib import Path
+
 
 class ProjectStats:
     def __init__(self, projectCode: str):
@@ -37,10 +37,19 @@ class ProjectStats:
             self.disqualifiedNumber = 0
             classified_folder_path = Path("static") / "classified_images"
             classifiedImages = []
-
+            self.individualClassStats = {
+                
+            }
+            for i in self.projectInfo.getProjectClasses():
+                self.individualClassStats[i] = 0
             for image in classified_folder_path.iterdir():
                 if image.name.startswith(f"classified_{self.projectInfo.projectCode}"):
                     classifiedImages.append(image)
+                    try:
+                        self.individualClassStats[image.name.split("_")[2]] += 1
+                    except Exception as error:
+                        logger.error(error)
+                        pass
 
             self.classifiedNumber = len(classifiedImages)
         except Exception as e:
@@ -57,6 +66,7 @@ def classificationUpdater(db, request, session, projectCode):
         projectInfo = Projects.query.filter_by(projectCode=projectCode).first()
         if not projectInfo:
             return jsonify({"message": "Project not found"}), 404
+        ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
         source_dir = os.path.join("static", projectInfo.projectFolder)
         classified_dir = os.path.join("static", "classified_images")
@@ -91,3 +101,31 @@ def classificationUpdater(db, request, session, projectCode):
     except Exception as e:
         logger.error(f"Error in classificationUpdater: {str(e)}")
         return jsonify({"message": f"An error occurred: {str(e)}"}), 500
+
+def uploadImages(db, request, session, projectCode):
+     
+    if 'photos' not in request.files:
+        return jsonify({'success': False, 'message': 'No files part in the request.'}), 400
+
+    files = request.files.getlist('photos')
+    if not files:
+        return jsonify({'success': False, 'message': 'No files selected for upload.'}), 400
+    projectInfo = Projects.query.filter_by(projectCode = projectCode).first()
+    project_folder = os.path.join('static', projectInfo.projectFolder)
+    os.makedirs(project_folder, exist_ok=True)  # Ensure the project folder exists
+
+    uploaded_files = []
+    for file in files:
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            save_path = os.path.join(project_folder, filename)
+            file.save(save_path)
+            uploaded_files.append(filename)
+        else:
+            return jsonify({'success': False, 'message': f'File "{file.filename}" is not allowed.'}), 400
+
+    return jsonify({
+        'success': True,
+        'message': f'{len(uploaded_files)} files successfully uploaded.',
+        'uploadedFiles': uploaded_files
+    }), 200

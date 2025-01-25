@@ -3,36 +3,78 @@
 {% block title %}Project Viewer{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="text-center mb-4">Project: {{ projectInfo.projectName }}</h1>
+<div class="container-fluid mt-5">
     <div class="row">
-        {% for image in unclassifiedImages %}
-        <div class="col-6 col-md-4 col-lg-3 mb-4">
-            <div class="card shadow-sm" id="imageCard{{ loop.index }}" data-image="{{ image }}">
-                <img src="{{ url_for('static', filename=projectInfo.projectFolder ~ '/' ~ image) }}" class="card-img-top" alt="Image">
-                <div class="card-body">
-                    <h5 class="card-title text-center">{{ image }}</h5>
-                    <div class="form-group mb-3">
-                        <label for="classSelect{{ loop.index }}">Select Class</label>
-                        <select id="classSelect{{ loop.index }}" class="form-control" onchange="storeClassification({{ loop.index }}, this.value)">
-                            <option value="">--Select Class--</option>
-                            {% for class_name in projectInfo.getProjectClasses() %}
-                            <option value="{{ class_name }}">{{ class_name }}</option>
-                            {% endfor %}
-                        </select>
+        <!-- Images Section -->
+        <div class="col-12 col-lg-9">
+            <h1 class="text-center mb-4">Project: {{ projectInfo.projectName }}</h1>
+            <div class="row">
+                {% for image in unclassifiedImages %}
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <div class="card shadow-sm" id="imageCard{{ loop.index }}" data-image="{{ image }}">
+                        <img src="{{ url_for('static', filename=projectInfo.projectFolder ~ '/' ~ image) }}" class="card-img-top" alt="Image">
+                        <div class="card-body">
+                            <h5 class="card-title text-center">{{ image }}</h5>
+                            <div class="form-group mb-3">
+                                <label for="classSelect{{ loop.index }}">Select Class</label>
+                                <select id="classSelect{{ loop.index }}" class="form-control" onchange="storeClassification({{ loop.index }}, this.value)">
+                                    <option value="">--Select Class--</option>
+                                    {% for class_name in projectInfo.getProjectClasses() %}
+                                    <option value="{{ class_name }}">{{ class_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- Disqualify Button -->
+                            <button class="btn btn-danger w-100" onclick="disqualifyImage({{ loop.index }})">Disqualify</button>
+                        </div>
                     </div>
-                    <!-- Disqualify Button -->
-                    <button class="btn btn-danger w-100" onclick="disqualifyImage({{ loop.index }})">Disqualify</button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right-Side Panel -->
+        <div class="col-12 col-lg-3">
+            <div class="sticky-top" style="top: 20px;">
+                <!-- Project Details Card -->
+                <div class="card shadow-lg mb-4 border-0 rounded-3">
+                    <div class="card-header bg-primary text-white text-center rounded-top">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Project Details
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <p><strong><i class="fas fa-file-alt me-2"></i>Name:</strong> {{ projectInfo.projectName }}</p>
+                        <p><strong><i class="fas fa-code me-2"></i>Code:</strong> {{ projectInfo.projectCode }}</p>
+                        <p><strong><i class="fas fa-layer-group me-2"></i>Classes:</strong> {{ ', '.join(projectInfo.getProjectClasses()) }}</p>
+                        {% for i in projectStat.individualClassStats %}
+                        <p><i class="fas fa-chart-bar me-2"></i>{{ i }}: {{ projectStat.individualClassStats[i] }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card shadow-lg border-0 rounded-3">
+                    <div class="card-body d-grid gap-3 text-center">
+                        <!-- Update Classification Button -->
+                        <button id="updateButton" class="btn btn-success btn-lg">
+                            <i class="fas fa-sync-alt me-2"></i>Update Classification
+                        </button>
+                        <!-- Reset Button -->
+                        <button id="resetButton" class="btn btn-warning btn-lg">
+                            <i class="fas fa-undo-alt me-2"></i>Reset
+                        </button>
+                        <!-- Upload Images Button -->
+                        <button id="uploadButton" class="btn btn-primary btn-lg" onclick="document.getElementById('fileInput').click();">
+                            <i class="fas fa-upload me-2"></i>Upload Photos
+                        </button>
+                        <!-- Hidden File Input -->
+                        <input type="file" id="fileInput" accept="image/*" multiple hidden onchange="handleFileUpload(this.files)">
+                    </div>
                 </div>
             </div>
         </div>
-        {% endfor %}
     </div>
-</div>
-
-<!-- Overlay Update Button -->
-<div id="updateButtonOverlay" class="fixed-bottom d-flex justify-content-end p-3">
-    <button id="updateButton" class="btn btn-success">Update Classification</button>
 </div>
 
 <script>
@@ -45,52 +87,38 @@
         const imageName = document.querySelector(`#imageCard${index}`).getAttribute('data-image');
 
         if (className) {
-            // Remove the image from disqualified list if it was previously disqualified
             const disqualifiedIndex = disqualified.indexOf(imageName);
             if (disqualifiedIndex !== -1) {
                 disqualified.splice(disqualifiedIndex, 1);
                 localStorage.setItem('disqualified', JSON.stringify(disqualified));
                 document.querySelector(`#imageCard${index}`).classList.remove('disqualified');
             }
-
-            // Ensure the image can only belong to one classification at a time
             for (let existingClass in classifications) {
                 const existingClassIndex = classifications[existingClass].indexOf(imageName);
                 if (existingClassIndex !== -1) {
-                    // Remove from the old classification
                     classifications[existingClass].splice(existingClassIndex, 1);
                 }
             }
-
-            // Add the image to the new classification
             if (!classifications[className]) {
                 classifications[className] = [];
             }
             classifications[className].push(imageName);
-
-            // Mark the image as classified visually
             document.querySelector(`#imageCard${index}`).classList.add('classified');
         } else {
-            // If no class is selected, remove the image from all classes
             for (let className in classifications) {
                 const indexInClass = classifications[className].indexOf(imageName);
                 if (indexInClass !== -1) {
                     classifications[className].splice(indexInClass, 1);
                 }
             }
-            // Remove the 'classified' class from the image card
             document.querySelector(`#imageCard${index}`).classList.remove('classified');
         }
-
-        // Update the classifications object in localStorage
         localStorage.setItem('classifications', JSON.stringify(classifications));
     }
 
     // Function to disqualify an image
     function disqualifyImage(index) {
         const imageName = document.querySelector(`#imageCard${index}`).getAttribute('data-image');
-
-        // Remove from any class before disqualifying
         for (let className in classifications) {
             const classIndex = classifications[className].indexOf(imageName);
             if (classIndex !== -1) {
@@ -99,23 +127,17 @@
                 document.querySelector(`#imageCard${index}`).classList.remove('classified');
             }
         }
-
-        // Add the image to the disqualified list if it's not already in it
         if (!disqualified.includes(imageName)) {
             disqualified.push(imageName);
-            // Mark the image as disqualified visually
             document.querySelector(`#imageCard${index}`).classList.add('disqualified');
         }
-
-        // Update the disqualified list in localStorage
         localStorage.setItem('disqualified', JSON.stringify(disqualified));
     }
 
-    // Update Button functionality: send classifications to the server
+    // Update Button functionality
     document.getElementById('updateButton').addEventListener('click', function() {
         if (Object.keys(classifications).length > 0 || disqualified.length > 0) {
-            // Send the classifications and disqualified images to the server via a POST request
-            fetch(`{{url_for('classficationUpdate', projectCode = projectInfo.projectCode)}}`, {
+            fetch(`{{ url_for('classficationUpdate', projectCode=projectInfo.projectCode) }}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -124,14 +146,9 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);  // Success message
-                localStorage.removeItem('classifications'); // Clear classifications after sending
-                localStorage.removeItem('disqualified'); // Clear disqualified images after sending
-                document.querySelectorAll('.classified').forEach(card => card.classList.remove('classified'));
-                document.querySelectorAll('.disqualified').forEach(card => card.classList.remove('disqualified'));
-
-                // Reload the page after successful update
-                window.location.reload();  // This will reload the page
+                alert(data.message);
+                localStorage.clear();
+                window.location.reload();
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -141,28 +158,57 @@
             alert('No classifications or disqualifications to update.');
         }
     });
+
+    // Reset Button functionality
+    document.getElementById('resetButton').addEventListener('click', function() {
+        localStorage.clear();
+        window.location.reload();
+    });
+
+    // Handle file upload
+    function handleFileUpload(files) {
+        if (files.length === 0) {
+            alert('No files selected.');
+            return;
+        }
+
+        const formData = new FormData();
+        for (const file of files) {
+            formData.append('photos', file);
+        }
+
+        // POST the files to the server
+        fetch('{{ url_for("uploadPhotos", projectCode=projectInfo.projectCode) }}', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            if (data.success) {
+                window.location.reload(); // Reload to reflect new images
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while uploading photos.');
+        });
+    }
 </script>
 
 <style>
-    /* Fixed Overlay for Update Button */
-    #updateButtonOverlay {
-        position: fixed;
-        right: 0;
-        bottom: 10%;
-        z-index: 9999;
+    /* Adjust layout for the right-side panel */
+    .sticky-top {
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     }
 
-    #updateButton {
-        width: 180px;
-        font-size: 16px;
-    }
-
-    /* Add a border or background color to classified images */
     .classified {
         border: 3px solid green;
     }
 
-    /* Add a border or background color to disqualified images */
     .disqualified {
         border: 3px solid red;
     }

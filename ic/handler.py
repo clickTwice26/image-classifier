@@ -13,11 +13,9 @@ def projectCreator(db, request, session):
         project_description = form.projectDescription.data
         project_folder = form.projectFolder.data
         project_classes = request.form.get('projectClasses', '').split(',')  # Split by commas
-        print(project_classes)
-        print(request.form)
+
         
         project_classes = [cls.strip() for cls in project_classes if cls.strip()]
-        print(project_classes)
         new_project = Projects(
             projectName=project_name,
             projectDescription=project_description,

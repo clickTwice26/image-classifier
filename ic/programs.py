@@ -2,6 +2,7 @@ import os
 import shutil
 import zipfile
 from flask import send_from_directory
+from werkzeug.utils import secure_filename
 
 def getEmptyDirectorys(path: str) -> list:
     rootDirs = os.listdir(path)
@@ -47,3 +48,8 @@ def sortClassification(projectCode: str):
 
     except Exception as e:
         return {"message": f"An error occurred: {str(e)}"}, 500
+
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
